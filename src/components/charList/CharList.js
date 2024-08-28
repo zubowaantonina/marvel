@@ -10,23 +10,35 @@ class CharList extends Component {
     state = {
         charList: [],
         loading: true,
-        error: false
+        error: false,
+        newItemLoding:false,
+        offset:210
     }
-    
     marvelService = new MarvelService();
 
     componentDidMount() {
-        // this.foo.bar = 0
-        this.marvelService.getAllCharacters()
-            .then(this.onCharListLoaded)
-            .catch(this.onError)
+       this.onRequest()
     }
-
-    onCharListLoaded = (charList) => {
-        this.setState({
-            charList,
-            loading: false
-        })
+onRequest=(offset)=>{
+    this.onCharListLoading()
+    this.marvelService.getAllCharacters(offset)
+    .then(this.onCharListLoaded)
+    .catch(this.onError)
+}
+onCharListLoading=()=>{
+    this.setState({
+        newItemLoding: true
+    });
+}
+    onCharListLoaded = (newCharList) => {
+        this.setState(({offset,charList})=>(
+            {
+                charList: [...charList,...newCharList ],
+                loading: false,
+                newItemLoding:false,
+                offset: offset+9
+            } 
+        ))
     }
 
     onError = () => {
@@ -62,7 +74,7 @@ class CharList extends Component {
         )
     }
     render() {
-        const {charList, loading, error} = this.state;
+        const {charList, loading, error,offset, newItemLoding} = this.state;
         const items = this.renderItems(charList);
         const errorMessage = error ? <ErrorMessage/> : null;
         const spinner = loading ? <Spinner/> : null;
@@ -73,7 +85,11 @@ class CharList extends Component {
             {errorMessage}
             {spinner}
             {content}
-            <button className="button button__main button__long">
+            <button 
+            className="button button__main button__long"
+            disabled={newItemLoding}
+            onClick={()=>this.onRequest(offset)}
+            >
                 <div className="inner">load more</div>
             </button>
         </div>
