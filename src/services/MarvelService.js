@@ -1,29 +1,32 @@
-class MarvelService {
-  _apiBasic = "https://gateway.marvel.com:443/v1/public/";
-  _apiKey = "apikey=0b245886065ab63ab566b5a6ecf930b3";
-_baseOffset=210
-  getResource = async (url) => {
-    let res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`Could not fetch ${url}, status ${res.status}`);
-    }
-    return await res.json();
-  };
-  getAllCharacters = async (offset = this._baseOffset) => {
-    const res = await this.getResource(
-      `${this._apiBasic}characters?limit=9&offset=${offset}&${this._apiKey}`
+import { useHttp } from "../hooks/http.hook";
+
+const useMarvelService = () => {
+  const { loading, request, error, clearError } = useHttp();
+  const _apiBasic = "https://gateway.marvel.com:443/v1/public/";
+  const _apiKey = "apikey=0b245886065ab63ab566b5a6ecf930b3";
+  const _baseOffset = 210;
+
+  const _baseOffsetComics = 0;
+  // getResource = async (url) => {
+  //   let res = await fetch(url);
+  //   if (!res.ok) {
+  //     throw new Error(`Could not fetch ${url}, status ${res.status}`);
+  //   }
+  //   return await res.json();
+  // };
+  const getAllCharacters = async (offset = _baseOffset) => {
+    const res = await request(
+      `${_apiBasic}characters?limit=9&offset=${offset}&${_apiKey}`
     );
-    return res.data.results.map(this._transformCharacter)
-    
-    
+    return res.data.results.map(_transformCharacter)
+
+
   };
-  getCharacter = async (id) => {
-    const res = await this.getResource(
-      `${this._apiBasic}characters/${id}?${this._apiKey}`
-    );
-    return this._transformCharacter(res.data.results[0]);
+  const getCharacter = async (id) => {
+    const res = await request(`${_apiBasic}characters/${id}?${_apiKey}`);
+    return _transformCharacter(res.data.results[0]);
   };
-  _transformCharacter = (char) => {
+  const _transformCharacter = (char) => {
     return {
       id: char.id,
       name: char.name,
@@ -31,8 +34,27 @@ _baseOffset=210
       thumbnail: char.thumbnail.path + "." + char.thumbnail.extension,
       homepage: char.urls[0].url,
       wiki: char.urls[1].url,
-      comics:char.comics.items
+      comics: char.comics.items
     };
   };
+  //получить все комиксы
+  const getAllComics = async (offset = _baseOffsetComics) => {
+    const res = await request(
+      `${_apiBasic}comics?orderBy=issueNumber&limit=8&offset=${offset}&${_apiKey}`
+    );
+    return res.data.results.map(_transformComics);
+  };
+
+  const _transformComics = (comics) => {
+    const price = comics.prices && comics.prices[0] && comics.prices[0].price;
+    return {
+      description: comics.description || 'Описание отсутствует',
+      thumbnail: comics.thumbnail.path + '.' + comics.thumbnail.extension,
+      id: comics.id,
+      title: comics.title,
+      price: price ? `${price}$` : 'not available'
+    }
+  }
+  return { loading, error, getAllCharacters, getCharacter, clearError, getAllComics }
 }
-export default MarvelService;
+export default useMarvelService;
