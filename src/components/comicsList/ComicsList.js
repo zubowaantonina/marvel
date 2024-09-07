@@ -1,4 +1,6 @@
+
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 import useMarvelService from '../../services/MarvelService';
@@ -39,18 +41,18 @@ const ComicsList = () => {
         setcomicsEnded(comicsEnded => ended)
     }
     function renderItems(arr) {
-        const items = arr.map((item) => {
+        const items = arr.map((item, i) => {
             const { id, name, thumbnail, price, avialable } = item;
 
             const priceItem = avialable !== 0 ? price : "NOT AVAILABLE";
 
             return (
-                <li className="comics__item" key={id}>
-                    <a href="#">
+                <li className="comics__item" key={i}>
+                    <Link to={`/comics/${item.id}`}>
                         <img src={thumbnail} alt={name} className="comics__item-img" />
                         <div className="comics__item-name">{name}</div>
                         <div className="comics__item-price">{priceItem}</div>
-                    </a>
+                    </Link>
                 </li>
             );
         });
