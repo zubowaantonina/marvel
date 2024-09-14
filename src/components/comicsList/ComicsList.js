@@ -9,13 +9,30 @@ import './comicsList.scss';
 import uw from '../../resources/img/UW.png';
 import xMen from '../../resources/img/x-men.png';
 
+
+const setContent = (process, Component, newItemLoading) => {
+    switch (process) {
+        case 'waiting':
+            return <Spinner/>;
+        case 'loading':
+            return newItemLoading ? <Component/> : <Spinner/>;
+        case 'confirmed':
+            return <Component/>;
+        case 'error':
+            return <ErrorMessage/>;
+        default:
+            throw new Error('Unexpected process state');
+    }
+}
+
 const ComicsList = () => {
+
     const [comicsList, setcomicsList] = useState([]);
     const [newItemLoading, setNewItemLoading] = useState(false);
     const [offset, setOffset] = useState(0);
     const [comicsEnded, setcomicsEnded] = useState(false);
 
-    const { loading, error, getAllComics } = useMarvelService()
+    const { loading, error, getAllComics, process, setProcess  } = useMarvelService()
 
     useEffect(() => {
         onRequest(offset, true)
@@ -27,6 +44,7 @@ const ComicsList = () => {
 
         getAllComics(offset)
             .then(onComicsListLoaded)
+            .then(() => setProcess('confirmed'))
 
     }
     const onComicsListLoaded = (newComicsList) => {
@@ -36,44 +54,36 @@ const ComicsList = () => {
         }
 
         setcomicsList(comicsList => [...comicsList, ...newComicsList]);
-        setNewItemLoading(newItemLoading => false);
+        setNewItemLoading(false);
         setOffset(offset => offset + 9)
-        setcomicsEnded(comicsEnded => ended)
+        setcomicsEnded(ended)
     }
-    function renderItems(arr) {
+    function renderItems (arr) {
         const items = arr.map((item, i) => {
-            const { id, name, thumbnail, price, avialable } = item;
-
-            const priceItem = avialable !== 0 ? price : "NOT AVAILABLE";
-
             return (
                 <li className="comics__item" key={i}>
                     <Link to={`/comics/${item.id}`}>
-                        <img src={thumbnail} alt={name} className="comics__item-img" />
-                        <div className="comics__item-name">{name}</div>
-                        <div className="comics__item-price">{priceItem}</div>
+                        <img src={item.thumbnail} alt={item.title} className="comics__item-img"/>
+                        <div className="comics__item-name">{item.title}</div>
+                        <div className="comics__item-price">{item.price}</div>
                     </Link>
                 </li>
-            );
-        });
-        return items;
+            )
+        })
+
+        return (
+            <ul className="comics__grid">
+                {items}
+            </ul>
+        )
     }
-    const items = renderItems(comicsList);
-
-    const errorMessage = error ? <ErrorMessage /> : null;
-    const spinner = loading && !newItemLoading ? <Spinner /> : null;
-
+   
 
 
     return (
         <div className="comics__list">
-            {errorMessage}
-            {spinner}
-
-            <ul className="comics__grid">
-                {items}
-
-            </ul>
+           {setContent(process, () => renderItems(comicsList), newItemLoading)}
+            
             <button
                 className="button button__main button__long"
                 disabled={newItemLoading}
