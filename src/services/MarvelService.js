@@ -43,12 +43,12 @@ const useMarvelService = () => {
     return res.data.results.map(_transformCharacter)
   }
   //получить все комиксы
-  const getAllComics = async (offset = _baseOffsetComics) => {
-    const res = await request(
-      `comics?orderBy=issueNumber&limit=8&offset=${offset}&${_apiKey}`
-    );
-    return res.data.results.map(_transformComics);
-  };
+  const getAllComics = async (offset = 0) => {
+		const res = await request(
+			`${_apiBasic}comics?orderBy=issueNumber&limit=8&offset=${offset}&${_apiKey}`
+		);
+		return res.data.results.map(_transformComics);
+	};
   const getComic = async (id) => {
     const res = await request(`${_apiBasic}comics/${id}?${_apiKey}`);
     return _transformComics(res.data.results[0]);
